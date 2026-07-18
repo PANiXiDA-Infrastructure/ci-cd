@@ -39,9 +39,7 @@ externalSecrets:
     enabled: true
     targetName: my-service-api-env
     remoteKey: applications/my-service/development
-    data:
-      - secretKey: ConnectionStrings__PostgreSqlConnectionString
-        remoteProperty: ConnectionStrings__PostgreSqlConnectionString
+    extractAll: true
   registry:
     enabled: true
     targetName: my-service-registry
@@ -53,6 +51,14 @@ migrations:
     repository: ghcr.io/example/my-service/ef-migrator
     tag: "123"
 ```
+
+Set `externalSecrets.app.extractAll` to `true` to copy every property from
+`externalSecrets.app.remoteKey` into the target Kubernetes Secret. Leave it
+disabled to map selected properties through `externalSecrets.app.data`.
+
+Application and migration containers consume the target Secret through
+`envFrom`. Updating the remote secret refreshes the Kubernetes Secret, but
+environment variables in existing pods require a new rollout.
 
 Validate locally:
 

@@ -49,6 +49,7 @@ externalSecrets:
     enabled: false
     targetName: ""
     remoteKey: ""
+    extractAll: false
     data: []
   registry:
     enabled: false
