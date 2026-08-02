@@ -29,8 +29,8 @@ another project fails.
 
 Each matrix job publishes its TRX and Cobertura outputs as a short-lived
 artifact. The final reporting job downloads all artifacts, publishes the full
-test report, merges every Cobertura file, and applies `COVERAGE_THRESHOLD` to
-the combined line coverage.
+test report, merges the canonical Cobertura file from every covered test
+project, and applies `COVERAGE_THRESHOLD` to the combined line coverage.
 
 The consuming repository can configure:
 

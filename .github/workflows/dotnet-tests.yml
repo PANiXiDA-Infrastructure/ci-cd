@@ -206,8 +206,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          ACTUAL_TEST_PROJECT_COUNT="$(find "$REPORT_DIRECTORY" -name 'test_results.trx' | wc -l)"
-          ACTUAL_COVERAGE_PROJECT_COUNT="$(find "$REPORT_DIRECTORY" -name 'coverage.cobertura.xml' | wc -l)"
+          # Microsoft.Testing.Platform also copies coverage into nested TRX attachment directories.
+          ACTUAL_TEST_PROJECT_COUNT="$(find "$REPORT_DIRECTORY" -mindepth 2 -maxdepth 2 -type f -name 'test_results.trx' | wc -l)"
+          ACTUAL_COVERAGE_PROJECT_COUNT="$(find "$REPORT_DIRECTORY" -mindepth 2 -maxdepth 2 -type f -name 'coverage.cobertura.xml' | wc -l)"
 
           if [ "$ACTUAL_TEST_PROJECT_COUNT" -ne "$EXPECTED_TEST_PROJECT_COUNT" ]; then
             echo "::error::Expected $EXPECTED_TEST_PROJECT_COUNT TRX reports, found $ACTUAL_TEST_PROJECT_COUNT"
@@ -220,25 +221,25 @@ jobs:
           fi
 
       - name: Publish test results
-        if: ${{ always() && hashFiles('tests-report/**/*.trx') != '' }}
+        if: ${{ always() && hashFiles('tests-report/*/test_results.trx') != '' }}
         uses: dorny/test-reporter@v3
         with:
           name: Tests
-          path: tests-report/**/*.trx
+          path: tests-report/*/test_results.trx
           reporter: dotnet-trx
           fail-on-error: "false"
 
       - name: Install reportgenerator
-        if: ${{ always() && hashFiles('tests-report/**/coverage.cobertura.xml') != '' }}
+        if: ${{ always() && hashFiles('tests-report/*/coverage.cobertura.xml') != '' }}
         run: |
           dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5.11
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: Generate coverage summary
-        if: ${{ always() && hashFiles('tests-report/**/coverage.cobertura.xml') != '' }}
+        if: ${{ always() && hashFiles('tests-report/*/coverage.cobertura.xml') != '' }}
         run: |
           reportgenerator \
-            -reports:"${{ env.REPORT_DIRECTORY }}/**/coverage.cobertura.xml" \
+            -reports:"${{ env.REPORT_DIRECTORY }}/*/coverage.cobertura.xml" \
             -targetdir:"$COVERAGE_DIRECTORY" \
             -reporttypes:"MarkdownSummary;TextSummary" \
             -assemblyfilters:"${{ vars.COVERAGE_ASSEMBLY_FILTERS }}"
