@@ -173,8 +173,7 @@ jobs:
           retention-days: 1
           compression-level: 1
 
-  report:
-    name: Test results and coverage
+  run:
     if: ${{ always() }}
     needs:
       - discover
