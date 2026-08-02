@@ -54,13 +54,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout values repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: values
 
       - name: Checkout chart repository
         if: ${{ inputs.chart-repository != '' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.chart-repository }}
           ref: ${{ inputs.chart-ref }}

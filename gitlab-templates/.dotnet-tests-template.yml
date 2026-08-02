@@ -15,7 +15,7 @@
             TEST_EXIT=$?
             set -e
 
-            dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.4.16
+            dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5.11
             dotnet tool install --global trx2junit
             export PATH="$PATH:/root/.dotnet/tools"
 
