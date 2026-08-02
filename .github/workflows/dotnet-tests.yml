@@ -85,7 +85,6 @@ jobs:
     env:
       TEST_PROJECT: ${{ matrix.project }}
       TEST_PROJECT_REPORT_DIRECTORY: tests-report/${{ matrix.id }}
-      TEST_ARTIFACT_PATH: ${{ github.workspace }}/${{ vars.PROJECT_FOLDER }}/tests-report
       COLLECT_COVERAGE: ${{ matrix.collectCoverage }}
     steps:
       - uses: actions/checkout@v7
@@ -115,13 +114,17 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
-      - name: Restore test project
+      - name: Restore .NET solution
         working-directory: ${{ vars.PROJECT_FOLDER }}
-        run: dotnet restore "$TEST_PROJECT"
+        run: dotnet restore
 
       - name: Prepare test reports
+        if: ${{ always() }}
+        id: reports
         working-directory: ${{ vars.PROJECT_FOLDER }}
-        run: mkdir -p "$TEST_PROJECT_REPORT_DIRECTORY"
+        run: |
+          mkdir -p "$TEST_PROJECT_REPORT_DIRECTORY"
+          echo "artifact_path=$(realpath "$REPORT_DIRECTORY")" >> "$GITHUB_OUTPUT"
 
       - name: Run tests
         working-directory: ${{ vars.PROJECT_FOLDER }}
@@ -168,7 +171,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.id }}
-          path: ${{ env.TEST_ARTIFACT_PATH }}
+          path: ${{ steps.reports.outputs.artifact_path }}
           if-no-files-found: warn
           retention-days: 1
           compression-level: 1
