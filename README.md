@@ -42,3 +42,31 @@ The consuming repository can configure:
 
 Projects matched by `COVERAGE_EXCLUDED_TEST_PROJECTS` still run and publish
 TRX results; only their coverage instrumentation is disabled.
+
+## .NET SonarQube workflow
+
+The reusable `.github/workflows/dotnet-sonar.yml` workflow restores, builds,
+and analyzes a .NET solution, then waits for the SonarQube Quality Gate.
+
+Add the following job to a consuming repository:
+
+```yaml
+sonar:
+  uses: PANiXiDA-Infrastructure/ci-cd/.github/workflows/dotnet-sonar.yml@main
+  with:
+    project-key: ${{ vars.SONAR_PROJECT_KEY }}
+  secrets:
+    sonar-token: ${{ secrets.SONAR_TOKEN }}
+    registry-user: ${{ secrets.REGISTRY_USER }}
+    registry-token: ${{ secrets.REGISTRY_TOKEN }}
+```
+
+The consuming repository must configure:
+
+- `PROJECT_FOLDER` with the directory containing the .NET solution;
+- `SONAR_HOST_URL` with the SonarQube server URL;
+- `SONAR_PROJECT_KEY` with the project key passed to the workflow;
+- `SONAR_TOKEN`, `REGISTRY_USER`, and `REGISTRY_TOKEN` as secrets.
+
+Use the optional `exclusions` input to replace the default SonarQube
+exclusions.
