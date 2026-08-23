@@ -241,8 +241,17 @@ jobs:
           reportgenerator \
             -reports:"${{ env.REPORT_DIRECTORY }}/*/coverage.cobertura.xml" \
             -targetdir:"$COVERAGE_DIRECTORY" \
-            -reporttypes:"MarkdownSummary;TextSummary" \
+            -reporttypes:"MarkdownSummary;TextSummary;SonarQube" \
             -assemblyfilters:"${{ vars.COVERAGE_ASSEMBLY_FILTERS }}"
+
+      - name: Upload SonarQube coverage report
+        if: ${{ always() && hashFiles('tests-report/coverage/SonarQube.xml') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: dotnet-coverage-sonarqube
+          path: tests-report/coverage/SonarQube.xml
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Add coverage to job summary
         if: ${{ always() && hashFiles('tests-report/coverage/Summary.md') != '' }}
