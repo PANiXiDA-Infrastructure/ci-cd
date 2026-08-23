@@ -1,0 +1,107 @@
+on:
+  workflow_call:
+    inputs:
+      project-key:
+        required: true
+        type: string
+      exclusions:
+        required: false
+        type: string
+        default: >-
+          **/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/nuget.config
+
+    secrets:
+      sonar-token:
+        required: true
+      registry-user:
+        required: true
+      registry-token:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: ./global.json
+
+      - name: Create nuget.config
+        if: ${{ vars.NUGET_CONFIG != '' }}
+        env:
+          NUGET_CONFIG: ${{ vars.NUGET_CONFIG }}
+          NUGET_PROVIDER: ${{ vars.NUGET_PROVIDER }}
+          REGISTRY_USER: ${{ secrets.registry-user }}
+          REGISTRY_TOKEN: ${{ secrets.registry-token }}
+        run: |
+          echo "$NUGET_CONFIG" | envsubst > "${{ vars.PROJECT_FOLDER }}/nuget.config"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', '**/global.json', '**/packages.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.sonar/cache
+          key: sonar-${{ runner.os }}
+          restore-keys: |
+            sonar-${{ runner.os }}-
+
+      - name: Install SonarQube scanner
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Restore .NET solution
+        working-directory: ${{ vars.PROJECT_FOLDER }}
+        run: |
+          dotnet restore
+
+      - name: Build and analyze
+        working-directory: ${{ vars.PROJECT_FOLDER }}
+        env:
+          SONAR_EXCLUSIONS: ${{ inputs.exclusions }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_PROJECT_KEY: ${{ inputs.project-key }}
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$SONAR_HOST_URL" ]]; then
+            echo "::error::SONAR_HOST_URL variable is required"
+            exit 1
+          fi
+
+          if [[ -z "$SONAR_PROJECT_KEY" ]]; then
+            echo "::error::project-key input is required"
+            exit 1
+          fi
+
+          SONAR_ARGS=(
+            "/k:$SONAR_PROJECT_KEY"
+            "/d:sonar.token=$SONAR_TOKEN"
+            "/d:sonar.host.url=$SONAR_HOST_URL"
+            "/d:sonar.qualitygate.wait=true"
+            "/d:sonar.qualitygate.timeout=1800"
+          )
+
+          if [[ -n "$SONAR_EXCLUSIONS" ]]; then
+            SONAR_ARGS+=("/d:sonar.exclusions=$SONAR_EXCLUSIONS")
+          fi
+
+          dotnet sonarscanner begin "${SONAR_ARGS[@]}"
+          dotnet build --configuration Release --no-restore
+          dotnet sonarscanner end "/d:sonar.token=$SONAR_TOKEN"
