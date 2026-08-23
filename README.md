@@ -30,7 +30,8 @@ another project fails.
 Each matrix job publishes its TRX and Cobertura outputs as a short-lived
 artifact. The final reporting job downloads all artifacts, publishes the full
 test report, merges the canonical Cobertura file from every covered test
-project, and applies `COVERAGE_THRESHOLD` to the combined line coverage.
+project, publishes `dotnet-coverage-sonarqube` for the SonarQube workflow, and
+applies `COVERAGE_THRESHOLD` to the combined line coverage.
 
 The consuming repository can configure:
 
@@ -51,7 +52,14 @@ and analyzes a .NET solution, then waits for the SonarQube Quality Gate.
 Add the following job to a consuming repository:
 
 ```yaml
+tests:
+  uses: PANiXiDA-Infrastructure/ci-cd/.github/workflows/dotnet-tests.yml@main
+  secrets:
+    registry-user: ${{ secrets.REGISTRY_USER }}
+    registry-token: ${{ secrets.REGISTRY_TOKEN }}
+
 sonar:
+  needs: tests
   uses: PANiXiDA-Infrastructure/ci-cd/.github/workflows/dotnet-sonar.yml@main
   with:
     project-key: ${{ vars.SONAR_PROJECT_KEY }}
@@ -60,6 +68,12 @@ sonar:
     registry-user: ${{ secrets.REGISTRY_USER }}
     registry-token: ${{ secrets.REGISTRY_TOKEN }}
 ```
+
+The `needs: tests` dependency is required because the SonarQube workflow
+downloads the `dotnet-coverage-sonarqube` artifact produced by the test
+workflow. The test workflow continues to enforce the combined overall
+`COVERAGE_THRESHOLD`, while the SonarQube Quality Gate evaluates coverage on
+new code.
 
 The consuming repository must configure:
 
