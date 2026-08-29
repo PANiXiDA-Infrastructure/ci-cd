@@ -62,11 +62,42 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
+      - name: Resolve SonarQube server version
+        id: sonar-server
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$SONAR_HOST_URL" ]]; then
+            echo "::error::SONAR_HOST_URL variable is required"
+            exit 1
+          fi
+
+          server_version="$(
+            curl \
+              --fail \
+              --silent \
+              --show-error \
+              --retry 3 \
+              --retry-all-errors \
+              --connect-timeout 10 \
+              --max-time 30 \
+              "${SONAR_HOST_URL%/}/api/server/version"
+          )"
+
+          if [[ ! "$server_version" =~ ^[0-9A-Za-z._-]+$ ]]; then
+            echo "::error::SonarQube returned an invalid server version"
+            exit 1
+          fi
+
+          echo "version=$server_version" >> "$GITHUB_OUTPUT"
+
       - name: Cache SonarQube packages
         uses: actions/cache@v6
         with:
           path: ~/.sonar/cache
-          key: sonar-${{ runner.os }}
+          key: sonar-${{ runner.os }}-${{ steps.sonar-server.outputs.version }}
           restore-keys: |
             sonar-${{ runner.os }}-
 
