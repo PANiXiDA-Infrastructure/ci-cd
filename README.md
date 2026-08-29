@@ -31,7 +31,8 @@ Each matrix job publishes its TRX and Cobertura outputs as a short-lived
 artifact. The final reporting job downloads all artifacts, publishes the full
 test report, merges the canonical Cobertura file from every covered test
 project, publishes `dotnet-coverage-sonarqube` for the SonarQube workflow, and
-applies `COVERAGE_THRESHOLD` to the combined line coverage.
+applies `COVERAGE_THRESHOLD` independently to the combined line and branch
+coverage.
 
 The consuming repository can configure:
 
@@ -39,7 +40,8 @@ The consuming repository can configure:
 - `COVERAGE_EXCLUDED_TEST_PROJECTS` as space-separated glob patterns for test
   projects that cannot run with coverage instrumentation;
 - `COVERAGE_ASSEMBLY_FILTERS` for ReportGenerator assembly filtering;
-- `COVERAGE_THRESHOLD` for the minimum combined line coverage.
+- `COVERAGE_THRESHOLD` for the minimum combined line and branch coverage. Each
+  metric must meet the threshold independently.
 
 Projects matched by `COVERAGE_EXCLUDED_TEST_PROJECTS` still run and publish
 TRX results; only their coverage instrumentation is disabled.
@@ -71,9 +73,9 @@ sonar:
 
 The `needs: tests` dependency is required because the SonarQube workflow
 downloads the `dotnet-coverage-sonarqube` artifact produced by the test
-workflow. The test workflow continues to enforce the combined overall
-`COVERAGE_THRESHOLD`, while the SonarQube Quality Gate evaluates coverage on
-new code.
+workflow. The test workflow applies the overall `COVERAGE_THRESHOLD`
+independently to combined line and branch coverage, while the SonarQube Quality
+Gate evaluates coverage on new code.
 
 The consuming repository must configure:
 
