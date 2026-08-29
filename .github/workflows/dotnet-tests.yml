@@ -263,9 +263,13 @@ jobs:
         if: ${{ always() && hashFiles('tests-report/coverage/Summary.txt') != '' }}
         run: |
           LINE_COVERAGE=$(grep -Po 'Line coverage[:\s]+\K[\d.]+' "$COVERAGE_DIRECTORY/Summary.txt" | head -1 || echo 0)
+          BRANCH_COVERAGE=$(grep -Po 'Branch coverage[:\s]+\K[\d.]+' "$COVERAGE_DIRECTORY/Summary.txt" | head -1 || echo 0)
           echo "Line coverage: ${LINE_COVERAGE}% (threshold: ${{ vars.COVERAGE_THRESHOLD }}%)"
+          echo "Branch coverage: ${BRANCH_COVERAGE}% (threshold: ${{ vars.COVERAGE_THRESHOLD }}%)"
           awk -v c="$LINE_COVERAGE" -v t="${{ vars.COVERAGE_THRESHOLD }}" 'BEGIN{exit (c+0<t+0)}' \
-            || { echo "Coverage ${LINE_COVERAGE}% is below threshold ${{ vars.COVERAGE_THRESHOLD }}%"; exit 1; }
+            || { echo "Line coverage ${LINE_COVERAGE}% is below threshold ${{ vars.COVERAGE_THRESHOLD }}%"; exit 1; }
+          awk -v c="$BRANCH_COVERAGE" -v t="${{ vars.COVERAGE_THRESHOLD }}" 'BEGIN{exit (c+0<t+0)}' \
+            || { echo "Branch coverage ${BRANCH_COVERAGE}% is below threshold ${{ vars.COVERAGE_THRESHOLD }}%"; exit 1; }
 
       - name: Propagate test failures
         if: ${{ always() && needs.test.result != 'success' }}
