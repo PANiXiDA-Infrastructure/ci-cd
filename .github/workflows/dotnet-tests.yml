@@ -242,7 +242,8 @@ jobs:
             -reports:"${{ env.REPORT_DIRECTORY }}/*/coverage.cobertura.xml" \
             -targetdir:"$COVERAGE_DIRECTORY" \
             -reporttypes:"MarkdownSummary;TextSummary;SonarQube" \
-            -assemblyfilters:"${{ vars.COVERAGE_ASSEMBLY_FILTERS }}"
+            -assemblyfilters:"${{ vars.COVERAGE_ASSEMBLY_FILTERS }}" \
+            -filefilters:"-*/obj/*;-*/Migrations/*"
 
       - name: Upload SonarQube coverage report
         if: ${{ always() && hashFiles('tests-report/coverage/SonarQube.xml') != '' }}
