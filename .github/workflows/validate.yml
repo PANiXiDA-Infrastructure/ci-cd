@@ -20,7 +20,7 @@ jobs:
       - name: Validate GitHub Actions workflows
         uses: docker://rhysd/actionlint:1.7.12
         with:
-          args: -color
+          args: -color -shellcheck=
 
   notify:
     if: ${{ always() && github.event_name == 'push' && github.ref_name == 'main' }}

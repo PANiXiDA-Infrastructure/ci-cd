@@ -45,7 +45,6 @@ jobs:
             COLLECT_COVERAGE=true
 
             for PATTERN in $COVERAGE_EXCLUDED_TEST_PROJECTS; do
-              # shellcheck disable=SC2053 # Patterns intentionally use glob matching.
               if [[ "$TEST_PROJECT" == $PATTERN ]]; then
                 COLLECT_COVERAGE=false
                 break
@@ -71,11 +70,9 @@ jobs:
             )"
           done
 
-          {
-            echo "matrix=$(jq -c '{include: .}' <<< "$TEST_MATRIX")"
-            echo "test-project-count=${#TEST_PROJECTS[@]}"
-            echo "coverage-project-count=$COVERAGE_PROJECT_COUNT"
-          } >> "$GITHUB_OUTPUT"
+          echo "matrix=$(jq -c '{include: .}' <<< "$TEST_MATRIX")" >> "$GITHUB_OUTPUT"
+          echo "test-project-count=${#TEST_PROJECTS[@]}" >> "$GITHUB_OUTPUT"
+          echo "coverage-project-count=$COVERAGE_PROJECT_COUNT" >> "$GITHUB_OUTPUT"
           echo "Discovered ${#TEST_PROJECTS[@]} test project(s)." >> "$GITHUB_STEP_SUMMARY"
 
   test:
