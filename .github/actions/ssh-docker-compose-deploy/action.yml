@@ -3,31 +3,42 @@ description: Deploy docker compose stack to remote server via SSH
 
 inputs:
   server-user:
+    description: SSH username for the target server
     required: true
   server-host:
+    description: Hostname or IP address of the target server
     required: true
   ssh-port:
+    description: SSH port of the target server
     required: true
   ssh-private-key:
+    description: Private SSH key used to connect to the target server
     required: true
 
   service-folder:
+    description: Service directory name under the deployment root
     required: true
   deploy-root:
+    description: Root directory for deployments on the target server
     required: false
     default: /opt
 
   compose-file:
+    description: Path to the Docker Compose file to deploy
     required: true
 
   env-file:
+    description: Environment file contents for the deployed service
     required: true
 
   registry-url:
+    description: Container registry URL
     required: true
   registry-user:
+    description: Container registry username
     required: true
   registry-token:
+    description: Container registry access token
     required: true
 
 runs:
