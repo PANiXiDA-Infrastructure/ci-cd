@@ -29,9 +29,33 @@ jobs:
           patterns: |
             :(glob).github/actions/*/action.yml
 
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: 4.2.2
+
+      - name: Lint application chart
+        run: |
+          helm lint charts/application \
+            --strict \
+            --set image.repository=ghcr.io/example/api \
+            --set image.tag=1
+
+      - name: Render application chart
+        run: |
+          helm template example charts/application \
+            --set image.repository=ghcr.io/example/api \
+            --set image.tag=1 \
+            > /dev/null
+
   notify:
     if: ${{ always() && github.event_name == 'push' && github.ref_name == 'main' }}
-    needs: [ actionlint ]
+    needs: [ actionlint, helm ]
     uses: PANiXiDA-Infrastructure/ci-cd/.github/workflows/notify-telegram.yml@main
     with:
       event-name: ${{ github.event_name }}
