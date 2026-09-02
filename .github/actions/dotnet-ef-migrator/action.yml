@@ -3,20 +3,28 @@ description: Build and run EF migrator docker image
 
 inputs:
   registry-user:
+    description: Registry username used to restore private packages
     required: true
   registry-token:
+    description: Registry token used to restore private packages
     required: true
   env-file:
+    description: Environment file contents for the migrator container
     required: true
   project-folder:
+    description: Path to the project build context
     required: true
   migrator-folder:
+    description: Path to the migrator project folder
     required: true
   migrator-project:
+    description: Path to the migrator project file
     required: true
   nuget-config:
+    description: Optional nuget.config template contents
     required: false
   nuget-provider:
+    description: Optional NuGet provider substituted into nuget.config
     required: false
 
 runs:

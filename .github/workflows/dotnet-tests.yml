@@ -31,6 +31,17 @@ jobs:
 
           mapfile -t TEST_PROJECTS < <(find . -name '*Tests.csproj' | sort)
 
+          COVERAGE_EXCLUDED_PATTERNS=()
+          if [[ -n "$COVERAGE_EXCLUDED_TEST_PROJECTS" ]]; then
+            read -r -a COVERAGE_EXCLUDED_PATTERNS <<< "$COVERAGE_EXCLUDED_TEST_PROJECTS"
+          fi
+
+          mapfile -d '' -t COVERAGE_EXCLUDED_PROJECTS < <(
+            for PATTERN in "${COVERAGE_EXCLUDED_PATTERNS[@]}"; do
+              find . -type f -name '*Tests.csproj' -path "$PATTERN" -print0
+            done | sort -zu
+          )
+
           if [ "${#TEST_PROJECTS[@]}" -eq 0 ]; then
             echo "::error::No test projects matching *Tests.csproj were found"
             exit 1
@@ -44,8 +55,8 @@ jobs:
             TEST_PROJECT_ID="$(printf '%s' "$TEST_PROJECT" | sha256sum | cut -c1-12)"
             COLLECT_COVERAGE=true
 
-            for PATTERN in $COVERAGE_EXCLUDED_TEST_PROJECTS; do
-              if [[ "$TEST_PROJECT" == $PATTERN ]]; then
+            for EXCLUDED_PROJECT in "${COVERAGE_EXCLUDED_PROJECTS[@]}"; do
+              if [[ "$TEST_PROJECT" == "$EXCLUDED_PROJECT" ]]; then
                 COLLECT_COVERAGE=false
                 break
               fi
@@ -70,9 +81,11 @@ jobs:
             )"
           done
 
-          echo "matrix=$(jq -c '{include: .}' <<< "$TEST_MATRIX")" >> "$GITHUB_OUTPUT"
-          echo "test-project-count=${#TEST_PROJECTS[@]}" >> "$GITHUB_OUTPUT"
-          echo "coverage-project-count=$COVERAGE_PROJECT_COUNT" >> "$GITHUB_OUTPUT"
+          {
+            echo "matrix=$(jq -c '{include: .}' <<< "$TEST_MATRIX")"
+            echo "test-project-count=${#TEST_PROJECTS[@]}"
+            echo "coverage-project-count=$COVERAGE_PROJECT_COUNT"
+          } >> "$GITHUB_OUTPUT"
           echo "Discovered ${#TEST_PROJECTS[@]} test project(s)." >> "$GITHUB_STEP_SUMMARY"
 
   test:

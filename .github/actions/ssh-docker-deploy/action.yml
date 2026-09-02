@@ -3,42 +3,57 @@ description: Deploy dockerized service to remote server via SSH
 
 inputs:
   server-user:
+    description: SSH username for the target server
     required: true
   server-host:
+    description: Hostname or IP address of the target server
     required: true
   ssh-port:
+    description: SSH port of the target server
     required: true
   ssh-private-key:
+    description: Private SSH key used to connect to the target server
     required: true
 
   service-folder:
+    description: Service directory name under the deployment root
     required: true
   deploy-root:
+    description: Root directory for deployments on the target server
     required: false
     default: /opt
 
   container-name:
+    description: Name assigned to the deployed container
     required: true
   image:
+    description: Fully qualified container image to deploy
     required: true
 
   env-file:
+    description: Environment file contents for the deployed service
     required: true
 
   registry-url:
+    description: Container registry URL
     required: true
   registry-user:
+    description: Container registry username
     required: true
   registry-token:
+    description: Container registry access token
     required: true
 
   docker-network:
+    description: Docker network to attach the container to
     required: false
     default: npm_default
   docker-memory:
+    description: Docker memory limit for the container
     required: false
     default: 2g
   extra-docker-args:
+    description: Additional arguments passed to docker run
     required: false
     default: ""
 

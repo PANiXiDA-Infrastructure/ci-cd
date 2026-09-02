@@ -3,8 +3,10 @@ description: Restore, build and pack .NET project
 
 inputs:
   project_folder:
+    description: Path to the .NET project to pack
     required: true
   output_folder:
+    description: Path for generated NuGet packages
     required: true
 
 runs:
